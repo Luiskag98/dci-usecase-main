@@ -1,0 +1,195 @@
+configure {
+    policy-options {
+        policy-statement "accept-all" {
+            default-action {
+                action-type accept
+            }
+        }
+    }
+    port 1/1/c6 {
+        admin-state enable
+        connector {
+            breakout c1-100g
+        }
+    }
+    port 1/1/c6/1 {
+        admin-state enable
+        ethernet {
+            mode hybrid
+            encap-type dot1q
+        }
+    }
+    port 1/1/c7 {
+        admin-state enable
+        connector {
+            breakout c1-100g
+        }
+    }
+    port 1/1/c7/1 {
+        admin-state enable
+        ethernet {
+            mode hybrid
+            encap-type dot1q
+        }
+    }
+    port 1/1/c8 {
+        admin-state enable
+        connector {
+            breakout c1-100g
+        }
+    }
+    port 1/1/c8/1 {
+        admin-state enable
+        ethernet {
+            mode hybrid
+            encap-type dot1q
+        }
+    }
+    router "Base" {
+        autonomous-system 64678
+        router-id 192.168.255.1
+        interface "I1/1/c6/1" {
+            admin-state enable
+            port 1/1/c6/1:0
+            ipv4 {
+                primary {
+                    address 10.70.2.1
+                    prefix-length 31
+                }
+            }
+        }
+        interface "I1/1/c7/1" {
+            admin-state enable
+            port 1/1/c7/1:0
+            ipv4 {
+                primary {
+                    address 10.50.2.0
+                    prefix-length 31
+                }
+            }
+        }
+        interface "I1/1/c8/1" {
+            admin-state enable
+            port 1/1/c8/1:0
+            ipv4 {
+                primary {
+                    address 10.60.2.0
+                    prefix-length 31
+                }
+            }
+        }
+        interface "system" {
+            ipv4 {
+                primary {
+                    address 192.168.255.1
+                    prefix-length 32
+                }
+            }
+        }
+        bgp {
+            admin-state enable
+            rapid-withdrawal true
+            rapid-update {
+                evpn true
+            }
+            group "WAN" {
+                type internal
+                peer-as 64678
+                family {
+                    vpn-ipv4 true
+                }
+                local-as {
+                    as-number 64678
+                }
+                import {
+                    policy ["accept-all"]
+                }
+                export {
+                    policy ["accept-all"]
+                }
+            }
+            neighbor "192.168.255.0" {
+                group "WAN"
+            }
+            neighbor "192.168.254.0" {
+                group "WAN"
+            }
+            neighbor "192.168.254.1" {
+                group "WAN"
+            }
+        }
+        isis 0 {
+            admin-state enable
+            level-capability 2
+            lsp-lifetime 65535
+            area-address [00.0001]
+            graceful-restart {
+            }
+            overload-on-boot {
+                timeout 300
+            }
+            lsp-refresh {
+                interval 65000
+                half-lifetime true
+            }
+            timers {
+                spf-wait {
+                    spf-max-wait 5000
+                    spf-initial-wait 50
+                    spf-second-wait 200
+                }
+                lsp-wait {
+                    lsp-max-wait 5000
+                    lsp-initial-wait 50
+                    lsp-second-wait 200
+                }
+            }
+            loopfree-alternate {
+                augment-route-table true
+                remote-lfa {
+                }
+            }
+            interface "I1/1/c6/1" {
+                admin-state enable
+                interface-type point-to-point
+            }
+            interface "I1/1/c7/1" {
+                admin-state enable
+                interface-type point-to-point
+            }
+            interface "I1/1/c8/1" {
+                admin-state enable
+                interface-type point-to-point
+            }
+            interface "system" {
+                admin-state enable
+            }
+            level 2 {
+                wide-metrics-only true
+            }
+        }
+        ldp {
+            admin-state enable
+            interface-parameters {
+                interface "I1/1/c6/1" {
+                    admin-state enable
+                    ipv4 {
+                        admin-state enable
+                    }
+                }
+                interface "I1/1/c7/1" {
+                    admin-state enable
+                    ipv4 {
+                        admin-state enable
+                    }
+                }
+                interface "I1/1/c8/1" {
+                    admin-state enable
+                    ipv4 {
+                        admin-state enable
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,100 @@
+name: dci-usecase-DC2
+prefix: ""
+
+mgmt:
+    network: dci-usecase-DC2-lab
+    ipv4-subnet: 172.20.41.0/24
+
+topology:
+  kinds:
+    srl:
+      image: ghcr.io/nokia/srlinux:23.10.2
+    linux:
+      image: ghcr.io/hellt/network-multitool
+  nodes:
+    br-dc2-d1-s1:
+      kind: bridge
+    br-dc2-d1-s2:
+      kind: bridge
+    br-dc2-d2-s1:
+      kind: bridge
+    br-dc2-d2-s2:
+      kind: bridge
+    dc2-l1:
+      kind: srl
+      type: ixrd2l
+      mgmt-ipv4: 172.20.41.11
+      labels:
+        role: leaf
+        fabric: yes
+    dc2-l2:
+      kind: srl
+      type: ixrd2l
+      mgmt-ipv4: 172.20.41.12
+      labels:
+        role: leaf
+        fabric: yes
+    dc2-l3:
+      kind: srl
+      type: ixrd2
+      mgmt-ipv4: 172.20.41.13
+      labels:
+        role: leaf
+        fabric: yes
+    dc2-l4:
+      kind: srl
+      type: ixrd2
+      mgmt-ipv4: 172.20.41.14
+      labels:
+        role: leaf
+        fabric: yes
+    dc2-s1:
+      kind: srl
+      type: ixrd3
+      mgmt-ipv4: 172.20.41.101
+      labels:
+        role: spine
+        fabric: yes
+    dc2-s2:
+      kind: srl
+      type: ixrd3
+      mgmt-ipv4: 172.20.41.102
+      labels:
+        role: spine
+        fabric: yes
+    dc2-cl121:
+      kind: linux
+      mgmt-ipv4: 172.20.41.133
+      binds:
+        - scripts:/scripts:ro
+      exec:
+        - ip link add bond0 type bond mode 802.3ad
+        - ip link set addr 00:c1:ab:02:01:21 dev bond0
+        - ip link add link bond0 name bond0.202 type vlan id 202
+        - ip link set eth1 down
+        - ip link set eth2 down
+        - ip link set eth1 master bond0
+        - ip link set eth2 master bond0
+        - ip link set eth1 up
+        - ip link set eth2 up
+        - ip link set bond0 up
+        - ip addr add 10.20.2.1/24 dev bond0.202
+        - ip route add 10.20.1.0/24 via 10.20.2.254 dev bond0.202
+        - iperf3 -s -D
+        - /scripts/iperf3clientloop.sh --background -c 10.20.1.1 --udp --bitrate 100K --parallel 10 --time 86400
+
+  links:
+    - endpoints: ["dc2-s1:e1-33", "br-dc2-d1-s1:dc2s1-e1-33"]
+    - endpoints: ["dc2-s1:e1-34", "br-dc2-d2-s1:dc2s1-e1-34"]
+    - endpoints: ["dc2-s2:e1-33", "br-dc2-d1-s2:dc2s2-e1-33"]
+    - endpoints: ["dc2-s2:e1-34", "br-dc2-d2-s2:dc2s2-e1-34"]
+    - endpoints: ["dc2-l1:e1-49", "dc2-s1:e1-3"]
+    - endpoints: ["dc2-l1:e1-50", "dc2-s2:e1-3"]
+    - endpoints: ["dc2-l2:e1-49", "dc2-s1:e1-4"]
+    - endpoints: ["dc2-l2:e1-50", "dc2-s2:e1-4"]
+    - endpoints: ["dc2-l3:e1-49", "dc2-s1:e1-5"]
+    - endpoints: ["dc2-l3:e1-50", "dc2-s2:e1-5"]
+    - endpoints: ["dc2-l4:e1-49", "dc2-s1:e1-6"]
+    - endpoints: ["dc2-l4:e1-50", "dc2-s2:e1-6"]
+    - endpoints: ["dc2-cl121:eth1", "dc2-l1:e1-2"]
+    - endpoints: ["dc2-cl121:eth2", "dc2-l2:e1-2"]

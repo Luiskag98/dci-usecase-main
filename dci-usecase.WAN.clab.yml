@@ -1,0 +1,74 @@
+name: dci-usecase-WAN
+prefix: ""
+
+mgmt:
+    network: dci-usecase-WAN-lab
+    ipv4-subnet: 172.20.39.0/24
+
+topology:
+  kinds:
+    vr-sros:
+      image: registry.srlinux.dev/pub/vr-sros:23.7.R1
+      type: sr-1s
+      license: license.txt
+  nodes:
+    br-dc1-d1-s1:
+      kind: bridge
+    br-dc1-d1-s2:
+      kind: bridge
+    br-dc1-d2-s1:
+      kind: bridge
+    br-dc1-d2-s2:
+      kind: bridge
+    br-dc2-d1-s1:
+      kind: bridge
+    br-dc2-d1-s2:
+      kind: bridge
+    br-dc2-d2-s1:
+      kind: bridge
+    br-dc2-d2-s2:
+      kind: bridge
+    dc1-d1:
+      kind: vr-sros
+      mgmt-ipv4: 172.20.39.21
+      labels:
+        role: dcgw
+        fabric: yes
+      startup-config: dc1-d1.partial.txt
+    dc1-d2:
+      kind: vr-sros
+      mgmt-ipv4: 172.20.39.22
+      labels:
+        role: dcgw
+        fabric: yes
+      startup-config: dc1-d2.partial.txt
+    dc2-d1:
+      kind: vr-sros
+      mgmt-ipv4: 172.20.39.31
+      labels:
+        role: dcgw
+        fabric: yes
+      startup-config: dc2-d1.partial.txt
+    dc2-d2:
+      kind: vr-sros
+      mgmt-ipv4: 172.20.39.32
+      labels:
+        role: dcgw
+        fabric: yes
+      startup-config: dc2-d2.partial.txt
+
+  links:
+    - endpoints: ["dc1-d1:eth1", "br-dc1-d1-s1:dc1d1-e1"]
+    - endpoints: ["dc1-d2:eth1", "br-dc1-d2-s1:dc1d2-e1"]
+    - endpoints: ["dc1-d1:eth2", "br-dc1-d1-s2:dc1d1-e2"]
+    - endpoints: ["dc1-d2:eth2", "br-dc1-d2-s2:dc1d2-e2"]
+    - endpoints: ["dc2-d1:eth1", "br-dc2-d1-s1:dc2d1-e1"]
+    - endpoints: ["dc2-d2:eth1", "br-dc2-d2-s1:dc2d2-e1"]
+    - endpoints: ["dc2-d1:eth2", "br-dc2-d1-s2:dc2d1-e2"]
+    - endpoints: ["dc2-d2:eth2", "br-dc2-d2-s2:dc2d2-e2"]
+    - endpoints: ["dc1-d1:eth6", "dc1-d2:eth6"]
+    - endpoints: ["dc2-d1:eth6", "dc2-d2:eth6"]
+    - endpoints: ["dc1-d1:eth7", "dc2-d1:eth7"]
+    - endpoints: ["dc1-d1:eth8", "dc2-d2:eth7"]
+    - endpoints: ["dc1-d2:eth7", "dc2-d1:eth8"]
+    - endpoints: ["dc1-d2:eth8", "dc2-d2:eth8"]
